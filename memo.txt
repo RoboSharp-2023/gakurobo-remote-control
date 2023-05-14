@@ -1,0 +1,15 @@
+
+point2 f: 0.391773 distance
+fp2 duty0.372 (official and zako OK)
+bp2 duty:0.477(official ok,zako over)
+
+point2 b: 0.49
+point3  : 0.627 distance
+
+P3 0.606,0.623,0.625,0.630,(WALL TOUCH) (OFFICIAL;ERROR)
+
+EN point1  0.397 dist:3.5m
+
+0.591 DIS 3.9 (BATTERY FULL)(OFFICIAL ERROR)
+
+sq 0.62 dist 8.3
