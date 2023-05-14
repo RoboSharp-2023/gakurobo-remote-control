@@ -1,0 +1,9 @@
+[submodule "ros2-spd-to-omni"]
+	path = ros2-spd-to-omni
+	url = git@github.com:naga-karupi/ros2-spd-to-omni.git
+[submodule "ros2-float-to-uint8array"]
+	path = ros2-float-to-uint8array
+	url = git@github.com:naga-karupi/ros2-float-to-uint8array.git
+[submodule "ros2-uart-communicator"]
+	path = ros2-uart-communicator
+	url = git@github.com:naga-karupi/ros2-uart-communicator.git
