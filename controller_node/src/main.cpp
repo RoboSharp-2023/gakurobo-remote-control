@@ -8,6 +8,7 @@
 #include <functional>
 
 #include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/u_int8_multi_array.hpp>
 #include <std_msgs/msg/float32_multi_array.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <sensor_msgs/msg/joy.hpp>
@@ -18,8 +19,11 @@ class controller_node:public rclcpp::Node {
 	sensor_msgs::msg::Joy::SharedPtr                               ctrl_msg;
 	rclcpp::TimerBase::SharedPtr                                   pub_tim;
 	rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr         ctrl_sub;
+	rclcpp::Publisher<std_msgs::msg::UInt8MultiArray>::SharedPtr   header_pub;
 	rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr float_pub;
 	rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr        twist_pub;
+
+	std_msgs::msg::UInt8MultiArray header_msg;
 
 	void sub_callback(sensor_msgs::msg::Joy::SharedPtr msg) {
 		ctrl_msg = msg;
@@ -60,7 +64,10 @@ class controller_node:public rclcpp::Node {
 
 		float_msg.data[1] = ctrl_msg->buttons[1]? 1.0: 0.0;
 
-		RCLCPP_INFO(this->get_logger(), "%f", float_msg.data[0]);
+		header_msg.data[2] = 0;
+		header_msg.data[3] = 0;
+
+		header_pub->publish(header_msg);
 		twist_pub->publish(twist_msg);
 		float_pub->publish(float_msg);
 	}
@@ -70,8 +77,13 @@ public:
 		pub_tim = create_wall_timer(10ms, std::bind(&controller_node::tim_callback, this));
 		ctrl_sub = create_subscription<sensor_msgs::msg::Joy>(
 			"joy", 10, std::bind(&controller_node::sub_callback, this, std::placeholders::_1));
+		header_pub = create_publisher<std_msgs::msg::UInt8MultiArray>("header_msg", 10);
 		twist_pub = create_publisher<geometry_msgs::msg::Twist>("tf_spd_msg", 10);
 		float_pub = create_publisher<std_msgs::msg::Float32MultiArray>("shot_msg", 10);
+
+		header_msg.data.resize(4);
+		header_msg.data[0] = 'r';
+		header_msg.data[1] = 'g';
 	}
 };
 
