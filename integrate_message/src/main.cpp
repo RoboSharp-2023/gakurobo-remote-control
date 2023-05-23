@@ -53,6 +53,7 @@ class integrate_msg: public rclcpp::Node {
 	}
 
 	void uart_tim_callback() {
+		// for(auto i = 0; i < uart_msg.data.size(); i++) uart_msg.data[i] = 'a' + i;
 		uart_pub->publish(uart_msg);
 	}
 

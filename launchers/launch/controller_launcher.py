@@ -19,9 +19,22 @@ def generate_launch_description():
                 output='screen',
                 emulate_tty=True,
                 parameters=[
-                    {"serial_name": "/dev/ttyUSB0"}
+                    {"serial_name": "/dev/ttyACM0"},
                 ]
             ),
+            
+            # Node(
+            #     package='uart_communicator',
+            #     executable='main',
+            #     exec_name='uart_communicator2',
+            #     name='uart_communicator2',
+            #     output='screen',
+            #     emulate_tty=True,
+            #     parameters=[
+            #         {"serial_name": "/dev/ttyUSB0"},
+            #         {"uart_topic_name": "solenoid_uart_msg"},
+            #     ]
+            # ),
             
             Node(
                 package='float_to_uint8array',

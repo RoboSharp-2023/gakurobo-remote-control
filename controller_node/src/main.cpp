@@ -22,6 +22,7 @@ class controller_node:public rclcpp::Node {
 	rclcpp::Publisher<std_msgs::msg::UInt8MultiArray>::SharedPtr   header_pub;
 	rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr float_pub;
 	rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr        twist_pub;
+	rclcpp::Publisher<std_msgs::msg::UInt8MultiArray>::SharedPtr   solenoid_pub;
 
 	std_msgs::msg::UInt8MultiArray header_msg;
 
@@ -62,14 +63,59 @@ class controller_node:public rclcpp::Node {
 		if (sum > 1.0) sum = float_msg.data[0] = 1.0;
 		if (sum < 0.0) sum = float_msg.data[0] = 0.0;
 
-		float_msg.data[1] = ctrl_msg->buttons[1]? 1.0: 0.0;
-
 		header_msg.data[2] = 0;
 		header_msg.data[3] = 0;
 
 		header_pub->publish(header_msg);
 		twist_pub->publish(twist_msg);
 		float_pub->publish(float_msg);
+
+		static bool old_button1_state = false;
+
+		std_msgs::msg::UInt8MultiArray solenoid_msg;
+		solenoid_msg.data.resize(8);
+
+		solenoid_msg.data[3] = ctrl_msg->buttons[1]? 0x85: 0;
+
+		if(old_button1_state ^ ctrl_msg->buttons[1])
+			solenoid_pub->publish(solenoid_msg);
+		
+		old_button1_state = ctrl_msg->buttons[1];
+
+		union{
+			struct{
+				uint16_t ID;
+				uint16_t cmd;//00:duty 01:current 02:speed 03:position
+				float M;
+			};
+			uint8_t bin[8];
+		} reload_msg;
+
+		auto lambda = [](float a) {
+			constexpr float Hz = 100, max = 0.1, accel_tim = 0.2;
+			static float old_spd = 0;
+
+			auto tmp = a-old_spd;
+			tmp = std::min(tmp, 0.02f);
+			tmp = std::max(tmp, -0.02f);
+
+			return tmp;
+		};
+
+		reload_msg.bin[1] = 7;
+		reload_msg.cmd = 2;
+		reload_msg.M   = 0.1*ctrl_msg->axes[7];
+
+		std_msgs::msg::UInt8MultiArray reload_std_msg;
+		reload_std_msg.data.resize(8);
+
+		for (size_t i = 0 ; reload_std_msg.data.size() < 8 ; i++){
+			reload_std_msg.data[i] = reload_msg.bin[i];
+		}
+
+		//RCLCPP_INFO(this->get_logger(), "%d, %d, %d ,%d, %d, %d, %d, %d", reload_msg.bin[0], reload_msg.bin[1], reload_msg.bin[2], reload_msg.bin[3], reload_msg.bin[4], reload_msg.bin[5], reload_msg.bin[6], reload_msg.bin[7]);
+
+		// solenoid_pub->publish(reload_std_msg);
 	}
 public:
 	
@@ -80,6 +126,8 @@ public:
 		header_pub = create_publisher<std_msgs::msg::UInt8MultiArray>("header_msg", 10);
 		twist_pub = create_publisher<geometry_msgs::msg::Twist>("tf_spd_msg", 10);
 		float_pub = create_publisher<std_msgs::msg::Float32MultiArray>("shot_msg", 10);
+		solenoid_pub = create_publisher<std_msgs::msg::UInt8MultiArray>("solenoid_uart_msg", 10);
+		
 
 		header_msg.data.resize(4);
 		header_msg.data[0] = 'r';
