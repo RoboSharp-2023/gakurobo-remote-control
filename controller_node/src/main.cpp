@@ -39,19 +39,27 @@ class controller_node:public rclcpp::Node {
 			return;
 		}
 
-		geometry_msgs::msg::Twist twist_msg;
+		static geometry_msgs::msg::Twist twist_msg;
 		std_msgs::msg::Float32MultiArray shot_msg;
 		static uint8_t rotate = 0, state_sqr_button = 0;
-		constexpr double coefficient[3] = {0.1, 0.2, 0.5};
+		constexpr double coefficient[3] = {0.5, 1.0, 2.0};
 		
 		
 		rotate += (ctrl_msg->buttons[3] & (ctrl_msg->buttons[3] ^ state_sqr_button)) ? 1 : 0;
 		rotate %= 3;
 		state_sqr_button = ctrl_msg->buttons[3];
 		//need to change
-		twist_msg.linear.x = ctrl_msg->axes[0] * coefficient[rotate];
-		twist_msg.linear.y = ctrl_msg->axes[1] * coefficient[rotate];
-		twist_msg.angular.z = ctrl_msg->axes[3] * coefficient[rotate];
+		static geometry_msgs::msg::Twist twist_msg_s;
+
+		auto clamp = [=](float target, float limit){
+			if(target > limit) return limit;
+			if(target < -limit) return -limit;
+			return target;
+		};
+
+		twist_msg.linear.x += clamp(ctrl_msg->axes[0] * coefficient[rotate] - twist_msg.linear.x, 0.1);
+		twist_msg.linear.y += clamp(ctrl_msg->axes[1] * coefficient[rotate] - twist_msg.linear.y, 0.1);
+		twist_msg.angular.z += clamp(ctrl_msg->axes[3] * coefficient[rotate] - twist_msg.angular.z, 0.1);
 
 		shot_msg.data.resize(2);
 		constexpr double shot_coeff = 0.001;
