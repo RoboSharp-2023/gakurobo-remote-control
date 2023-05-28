@@ -42,11 +42,11 @@ class controller_node:public rclcpp::Node {
 		static geometry_msgs::msg::Twist twist_msg;
 		std_msgs::msg::Float32MultiArray shot_msg;
 		static uint8_t rotate = 0, state_sqr_button = 0;
-		constexpr double coefficient[3] = {0.5, 1.0, 2.0};
+		constexpr double coefficient[2] = {0.5, 2.0};
 		
 		
 		rotate += (ctrl_msg->buttons[3] & (ctrl_msg->buttons[3] ^ state_sqr_button)) ? 1 : 0;
-		rotate %= 3;
+		rotate %= 2;
 		state_sqr_button = ctrl_msg->buttons[3];
 		//need to change
 		static geometry_msgs::msg::Twist twist_msg_s;
